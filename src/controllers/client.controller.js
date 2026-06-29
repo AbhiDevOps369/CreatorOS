@@ -2,7 +2,7 @@ import {asyncHandler} from "../utils/asyncHandler.js";
 import {ApiError} from  "../utils/apiError.js";
 import {ApiResponse} from  "../utils/apiResponse.js";
 import {Client} from "../models/client.models.js";
-
+import { checkAgencyOwnership } from "../utils/checkOwnership.js";
 const createClient=asyncHandler(async(req,res)=>{
     const {name,email,password}=req.body;
 
