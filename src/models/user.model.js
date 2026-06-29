@@ -29,6 +29,11 @@ const userSchema=new Schema({
         trim:true,
         required:true
     },
+    agencyId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Agency",
+    required: true
+    },
 
     //business attributes
 
