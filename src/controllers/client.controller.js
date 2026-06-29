@@ -3,6 +3,7 @@ import {ApiError} from  "../utils/apiError.js";
 import {ApiResponse} from  "../utils/apiResponse.js";
 import {Client} from "../models/client.models.js";
 import { checkAgencyOwnership } from "../utils/checkOwnership.js";
+
 const createClient=asyncHandler(async(req,res)=>{
     const {name,email,password}=req.body;
 
@@ -51,9 +52,7 @@ const getClientById=asyncHandler(async(req,res)=>{
 
     const client=await Client.findById(clientId);
     if (!client) throw new ApiError(404, "Client not found")
-    if(client.agencyId.toString() !== req.user.agencyId.toString()){
-        throw new ApiError(403,"Access denied");
-    }
+    checkAgencyOwnership(client,req.user.agencyId);
 
     return res.status(200).json(new ApiResponse(200,client,"Client retrieved successfully"));
 });
@@ -64,9 +63,7 @@ const updateClient=asyncHandler(async(req,res)=>{
 
     const client=await Client.findById(clientId);
     if (!client) throw new ApiError(404, "Client not found")
-    if (client.agencyId.toString() !== req.user.agencyId.toString()) {
-        throw new ApiError(403, "Access denied")
-    }
+    checkAgencyOwnership(client,req.user.agencyId);
     //hoping middleware validators wont allow non existing clients to controllers
 
     if(name){
@@ -101,9 +98,7 @@ const deleteClient=asyncHandler(async(req,res)=>{
 
     if (!client) throw new ApiError(404, "Client not found");
 
-    if (client.agencyId.toString() !== req.user.agencyId.toString()) {
-        throw new ApiError(403, "Access denied")
-    }
+    checkAgencyOwnership(client,req.user.agencyId);
 
     await Client.findByIdAndDelete(clientId);
 
