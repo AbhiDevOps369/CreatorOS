@@ -38,5 +38,68 @@ const createProject=asyncHandler(async(req,res)=>{
 
 });
 
+const getAllProjects=asyncHandler(async(req,res)=>{
+    const memberships=await Membership.find({userId:req.user._id});
+    const projectIds=memberships.map(m=>m.projectId);
+    const projects=await Project.find({
+        _id:{$in:projectIds},
+        agencyId:req.user.agencyId
+    }); 
 
-export {createProject}
+
+    return res.status(200).json(new ApiResponse(200,projects,"Success"));
+
+
+});
+
+const getProjectId=asyncHandler(async(req,res)=>{
+    const {projectId}=req.params;
+    const project=await Project.findById(projectId);
+
+    checkAgencyOwnership(project,req.user.agencyId);
+
+    return res.status(200).json(new ApiResponse(200,project,"Project retrieved successfully"));
+});
+
+const updateProject=asyncHandler(async(req,res)=>{
+    const {projectId}=req.params;
+    const {name,description}=req.body;
+    const project=await Project.findById(projectId);
+
+    checkAgencyOwnership(project,req.user.agencyId);
+
+    if(name){
+        project.name=name;
+    }
+    if(description){
+        project.description=description;
+    }
+
+    await project.save();
+    const updatedProject=await Project.findById(projectId);
+    if(!updatedProject){
+        throw new ApiError(500,"Internal Error in updation");
+    }
+
+    return res.status(200).json(new ApiResponse(200,updatedProject,"Project updated successfully"))
+});
+
+const deleteProject=asyncHandler(async(req,res)=>{
+    const {projectId}=req.params;
+    const project=await Project.findById(projectId);
+    checkAgencyOwnership(project,req.user.agencyId);
+
+
+    await Project.findByIdAndDelete(projectId);
+
+    const deletedProject=await Project.findById(projectId);
+    if(deletedProject){
+        throw new ApiError(500,"Internal Error in deletion");
+    }
+
+    return res.status(200).json(new ApiResponse(200,{},"Project deleted successfully"))
+    
+
+
+});
+export {createProject,getAllProjects, updateProject,deleteProject,getProjectId}
