@@ -32,3 +32,52 @@ const submitFootage=asyncHandler(async(req,res)=>{
     return res.status(200).json(new ApiResponse(200,{},"Success"));
 
 });
+
+const approveFootage = asyncHandler(async (req, res) => {
+    const { taskId } = req.params
+
+    const task = await Task.findById(taskId)
+    if (!task) throw new ApiError(404, "Task not found")
+
+    const project = await Project.findById(task.projectId)
+    if (!project) throw new ApiError(404, "Project not found")
+
+    checkAgencyOwnership(project, req.user.agencyId)
+
+    const nextStage = canTransition(project.stage, "approve-footage", req.membership.role)
+    if (!nextStage) {
+        throw new ApiError(422, "Illegal transition")
+    }
+
+    project.stage = nextStage
+    await project.save()
+
+    return res.status(200).json(new ApiResponse(200, project, "Footage approved"))
+});
+
+const rejectFootage=asyncHandler(async(req,res)=>{
+    const {taskId}=req.params;
+
+    const task=await Task.findById(taskId);
+
+    if (!task) throw new ApiError(404, "Task not found")
+
+    const project=await Project.findById(task.projectId);
+
+    if (!project) throw new ApiError(404, "Project not found")
+
+    checkAgencyOwnership(project,req.user.agencyId);
+
+    const nextStage=canTransition(project.stage,"reject-footage",req.membership.role);
+
+    if(!nextStage) throw new ApiError(422,"Illegal Transition for current state");
+
+    project.stage=nextStage;
+
+    await project.save();
+
+    return res.status(200).json(new ApiResponse(200, project, "Footage rejected"))
+});
+
+
+export {submitFootage,approveFootage,rejectFootage}
