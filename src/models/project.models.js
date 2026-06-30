@@ -38,6 +38,11 @@ const projectSchema=new Schema({
         type:mongoose.Schema.Types.ObjectId,
         ref:"User",
         required:true
+    },
+    
+    editApproved: {
+        type: Boolean,
+        default: false
     }
 
  
