@@ -24,7 +24,7 @@ const projectSchema=new Schema({
     },
     stage: {
         type: String,
-        enum: ["created", "team_allocated", "footage_submitted", "footage_review", "editing", "edit_review", "delivered"],
+        enum: ["created", "footage_collection", "footage_review", "editing", "edit_review", "delivered"],
         default: "created",
         required: true
     },
