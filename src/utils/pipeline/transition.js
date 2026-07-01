@@ -1,16 +1,13 @@
 const transitions = {
     created: {
-        "allocate-team": { roles: ["owner", "manager"], to: "team_allocated" }
+        "allocate-team": { roles: ["owner", "manager"], to: "footage_collection" }  
     },
-    team_allocated: {
-        "submit-footage": { roles: ["contributor"], to: "footage_submitted" }
-    },
-    footage_submitted: {
-        // no human actions here — controller auto-advances to footage_review
+    footage_collection: {
+        "submit-footage": { roles: ["contributor"], to: "footage_review" }
     },
     footage_review: {
         "approve-footage": { roles: ["reviewer"], to: "editing" },
-        "reject-footage": { roles: ["reviewer"], to: "team_allocated" }
+        "reject-footage": { roles: ["reviewer"], to: "footage_collection" }          
     },
     editing: {
         "submit-edit": { roles: ["contributor"], to: "edit_review" }

@@ -5,6 +5,7 @@ import { canTransition } from "../utils/pipeline/stateMachine.js";
 import { Project } from "../models/project.models.js";
 import {Task} from "../models/task.models.js";
 import { checkAgencyOwnership } from "../utils/checkOwnership.js";
+import { Subtask } from "../models/subtask.models.js"
 
 const submitFootage=asyncHandler(async(req,res)=>{
     const {url,message}=req.body;
@@ -25,7 +26,7 @@ const submitFootage=asyncHandler(async(req,res)=>{
         throw new ApiError(422, "Illegal transition — cannot submit footage from current stage");
     }
 
-    project.stage = "footage_review"; //auto advance
+    project.stage = nextState; 
     task.attachments.push({ url, message });
     await task.save();
     await project.save();
@@ -91,13 +92,14 @@ const createTask=asyncHandler(async(req,res)=>{
 
     checkAgencyOwnership(project,req.user.agencyId);
 
-    await Task.create({
-        title:title,
-        description:description,
-        projectId:projectId,
-        assignedTo: assignedTo,
+    const task = await Task.create({
+        title,
+        description,
+        projectId,
+        assignedTo,
         createdBy: req.user._id
     });
+
 
     const createdTask=await Task.findById(task._id);
 
@@ -214,4 +216,80 @@ const deleteTask=asyncHandler(async(req,res)=>{
     return res.status(200).json(new ApiResponse(200,{},"Successfully Deleted"));
 
 });
-export {submitFootage,approveFootage,rejectFootage,createTask,getAllTasks,getTaskById,updateTask,deleteTask}
+
+const submitEdit=asyncHandler(async(req,res)=>{
+    const {url,message}=req.body;
+    const {taskId}=req.params;
+
+    const task=await Task.findById(taskId);
+    if(!task){
+        throw new ApiError(404,"no task found");
+    }
+    const project=await Project.findById(task.projectId);
+    if(!project){
+        throw new ApiError(404,"no project found");
+    }
+    checkAgencyOwnership(project, req.user.agencyId);
+
+    const incompleteSubtasks = await Subtask.find({ 
+        taskId, 
+        isCompleted: false 
+    })
+    if (incompleteSubtasks.length > 0) {
+        throw new ApiError(422, "All subtasks must be completed before submitting edit")
+    }
+
+
+    const nextStage=canTransition(project.stage,"submit-edit",req.membership.role);
+    if (!nextStage) throw new ApiError(422, "Illegal transition")
+
+    project.stage=nextStage;
+
+    await project.save();
+
+    task.attachments.push({ url, message });
+
+    await task.save();
+    return res.status(200).json(new ApiResponse(200, task, "Edit submitted successfully"));
+});
+
+const approveEdit=asyncHandler(async(req,res)=>{
+    const {taskId} = req.params;
+
+    const task=await Task.findById(taskId);
+    if (!task) throw new ApiError(404, "Task not found")
+    const project=await Project.findById(task.projectId);
+    if (!project) throw new ApiError(404, "Project not found")
+    checkAgencyOwnership(project,req.user.agencyId);
+
+    const nextStage=canTransition(project.stage,"approve-edit",req.membership.role);
+    if (!nextStage) {
+        throw new ApiError(422, "Illegal transition")
+    }
+
+    project.stage = nextStage
+    project.editApproved = true;  
+    await project.save()
+
+    return res.status(200).json(new ApiResponse(200, project, "Edit approved"));
+});
+
+const rejectEdit=asyncHandler(async(req,res)=>{
+  const {taskId} = req.params;
+
+    const task=await Task.findById(taskId);
+    if (!task) throw new ApiError(404, "Task not found")
+    const project=await Project.findById(task.projectId);
+    if (!project) throw new ApiError(404, "Project not found")
+    checkAgencyOwnership(project,req.user.agencyId);
+
+    const nextStage = canTransition(project.stage, "request-changes", req.membership.role);
+    if (!nextStage) throw new ApiError(422, "Illegal transition");
+
+    project.stage = nextStage;
+    project.editApproved = false; 
+    await project.save();
+
+    return res.status(200).json(new ApiResponse(200, project, "Changes requested"));
+});
+export {submitFootage,approveFootage,rejectFootage,createTask,getAllTasks,getTaskById,updateTask,deleteTask,submitEdit,approveEdit,rejectEdit}
