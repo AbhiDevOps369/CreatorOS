@@ -79,5 +79,139 @@ const rejectFootage=asyncHandler(async(req,res)=>{
     return res.status(200).json(new ApiResponse(200, project, "Footage rejected"))
 });
 
+const createTask=asyncHandler(async(req,res)=>{
+    const {title,description, assignedTo}=req.body;
+    const {projectId}=req.params;
 
-export {submitFootage,approveFootage,rejectFootage}
+    const project=await Project.findById(projectId);
+
+    if(!project){
+        throw new ApiError(404,"no project exists");
+    }
+
+    checkAgencyOwnership(project,req.user.agencyId);
+
+    await Task.create({
+        title:title,
+        description:description,
+        projectId:projectId,
+        assignedTo: assignedTo,
+        createdBy: req.user._id
+    });
+
+    const createdTask=await Task.findById(task._id);
+
+    if(!createdTask){
+        throw new ApiError(500,"Internal server Error while creation");
+    }
+
+    return res.status(201).json(new ApiResponse(201,createdTask,"Success"));
+});
+
+const getAllTasks=asyncHandler(async(req,res)=>{
+    const {projectId}=req.params;
+    const project=await Project.findById(projectId);
+
+    if(!project){
+        throw new ApiError(404,"no project exists");
+    }
+
+    checkAgencyOwnership(project,req.user.agencyId);
+
+    const tasks=await Task.find({projectId:projectId});
+
+    res.status(200).json(new ApiResponse(200, tasks, "Tasks retrieved successfully"));
+
+});
+
+const getTaskById=asyncHandler(async(req,res)=>{
+    const { projectId, taskId } = req.params
+
+    // Basic checks : project?,agencyId<->project?, project<->task?
+    const project=await Project.findById(projectId);
+
+    if(!project){
+        throw new ApiError(404,"no project exists");
+    }
+
+    checkAgencyOwnership(project,req.user.agencyId);
+
+    const task = await Task.findById(taskId);
+    if (!task) throw new ApiError(404, "Task not found");
+
+    if(task.projectId.toString() !== projectId){
+        throw new ApiError(403,"Unauthorized access")
+    }
+
+    return res.status(200).json(new ApiResponse(200,task,"Success"));
+});
+
+const updateTask=asyncHandler(async(req,res)=>{
+    const {projectId,taskId}=req.params;
+    const {title,description}=req.body;
+     // Basic checks : project?,agencyId<->project?, project<->task?
+    const project=await Project.findById(projectId);
+
+    if(!project){
+        throw new ApiError(404,"no project exists");
+    }
+
+    checkAgencyOwnership(project,req.user.agencyId);
+
+    const task = await Task.findById(taskId);
+    if (!task) throw new ApiError(404, "Task not found");
+
+    if(task.projectId.toString() !== projectId){
+        throw new ApiError(403,"Unauthorized access")
+    }
+
+    if(title){
+        task.title=title;
+    }
+    if(description){
+        task.description=description;
+    }
+   
+
+    await task.save();
+
+    const updatedTask=await Task.findById(task._id);
+
+    if(!updatedTask){
+        throw new ApiError(500,"Internal Server Error for updation");
+    }
+
+    return res.status(200).json(new ApiResponse(200,updatedTask,"Successfully Updated"));
+
+
+});
+
+const deleteTask=asyncHandler(async(req,res)=>{
+    const {projectId,taskId}=req.params;
+    // Basic checks : project?,agencyId<->project?, project<->task?
+    const project=await Project.findById(projectId);
+
+    if(!project){
+        throw new ApiError(404,"no project exists");
+    }
+
+    checkAgencyOwnership(project,req.user.agencyId);
+
+    const task = await Task.findById(taskId);
+    if (!task) throw new ApiError(404, "Task not found");
+
+    if(task.projectId.toString() !== projectId){
+        throw new ApiError(403,"Unauthorized access")
+    }
+
+    await Task.findByIdAndDelete(taskId);
+
+    const deletedTask=await Task.findById(taskId);
+
+    if(deletedTask){
+        throw new ApiError(500,"Internal Server Error")
+    }
+    return res.status(200).json(new ApiResponse(200,{},"Successfully Deleted"));
+
+});
+export {submitFootage,approveFootage,rejectFootage,createTask,getAllTasks,getTaskById,updateTask,deleteTask}
