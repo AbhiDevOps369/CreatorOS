@@ -67,20 +67,20 @@ const updateMemberRole=asyncHandler(async(req,res)=>{
 });
 
 const deleteMember=asyncHandler(async(req,res)=>{
-    const {membershipId}=req.params;
+    const {projectId,userId}=req.params;
 
-    const membership=await Membership.findById(membershipId);
+    const membership=await Membership.findOne({userId,projectId});
 
     if(!membership){
         throw new ApiError(404,"No membership for this user available ");
     }
-    const user=await User.findById(membership.userId);
+    const user=await User.findById(userId);
 
-    checkAgencyOwnership(user,req.user.agencyId);
+    checkAgencyOwnership(user,user.agencyId);
 
-    await Membership.findByIdAndDelete(membershipId);
+    await Membership.findByIdAndDelete(membership._id);
 
-    const deletedMembership=await Membership.findById(membershipId);
+    const deletedMembership=await Membership.findById(membership._id);
 
     if(deletedMembership){
         throw new ApiError(500,"Internal server error in deletion ");

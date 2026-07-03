@@ -3,7 +3,7 @@ import { verifyJwt } from "../middlewares/auth.middleware.js";
 import {registerUser,login,logout,getCurrentUser,verifyEmail,refreshAccessToken,resendEmailVerification,forgotPassword,changePassword,resetForgotPassword} from 
 "../controllers/auth.controller.js";
 
-const router=Router();
+const router=Router({ mergeParams: true });
 
 
 

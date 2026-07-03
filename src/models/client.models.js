@@ -26,7 +26,7 @@ const clientSchema=new Schema({
     agencyId:{
         type:mongoose.Schema.Types.ObjectId,
         ref:"Agency",
-        required:true
+        default:null
     },
 
     //auth attributes

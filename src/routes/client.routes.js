@@ -5,7 +5,7 @@ import {requireRole} from "../middlewares/requireRole.middleware.js";
 import {createClient,getAllClients,getProjectsByClientId,getClientById,updateClient,deleteClient}
 from "../controllers/client.controller.js";
 
-const router=Router();
+const router=Router({ mergeParams: true });
 
 //public
 
@@ -21,7 +21,7 @@ router.delete("/:clientId",verifyJwt,requireRole("owner"),deleteClient);
 router.patch("/:clientId",verifyJwt,requireRole("owner","manager"),updateClient);
 
 
-
+export default router;
 /*
 7.3 Clients — /api/v1/clients
 
