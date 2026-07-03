@@ -52,7 +52,7 @@ const getAllProjects=asyncHandler(async(req,res)=>{
 
 });
 
-const getProjectId=asyncHandler(async(req,res)=>{
+const getProjectById=asyncHandler(async(req,res)=>{
     const {projectId}=req.params;
     const project=await Project.findById(projectId);
 
@@ -102,4 +102,4 @@ const deleteProject=asyncHandler(async(req,res)=>{
 
 
 });
-export {createProject,getAllProjects, updateProject,deleteProject,getProjectId}
+export {createProject,getAllProjects, updateProject,deleteProject,getProjectById}

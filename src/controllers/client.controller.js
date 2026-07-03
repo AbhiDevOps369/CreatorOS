@@ -2,6 +2,7 @@ import {asyncHandler} from "../utils/asyncHandler.js";
 import {ApiError} from  "../utils/apiError.js";
 import {ApiResponse} from  "../utils/apiResponse.js";
 import {Client} from "../models/client.models.js";
+import { Project } from "../models/project.models.js";
 import { checkAgencyOwnership } from "../utils/checkOwnership.js";
 
 const createClient=asyncHandler(async(req,res)=>{
@@ -44,6 +45,7 @@ const getAllClients=asyncHandler(async(req,res)=>{
     return res.status(200).json(new ApiResponse(200,clients,"All Clients in your Agency"));
 });
 
+
 const getClientById=asyncHandler(async(req,res)=>{
     const clientId=req.params.clientId;
     if(!clientId){
@@ -57,6 +59,20 @@ const getClientById=asyncHandler(async(req,res)=>{
     return res.status(200).json(new ApiResponse(200,client,"Client retrieved successfully"));
 });
 
+const getProjectsByClientId=asyncHandler(async(req,res)=>{
+    const {clientId}=req.params;
+
+    const client=await Client.findById(clientId);
+    if(!client){
+        throw new ApiError(404,"Client not found");
+    }
+    checkAgencyOwnership(client, req.user.agencyId);
+
+    const projects=await Project.find({clientId});
+    
+    return res.status(200).json(new ApiResponse(200,projects,"Success"));
+
+});
 const updateClient=asyncHandler(async(req,res)=>{
     const { clientId } = req.params
     const { name, email, password } = req.body
@@ -104,4 +120,4 @@ const deleteClient=asyncHandler(async(req,res)=>{
 
     return res.status(200).json(new ApiResponse(200,{},`Deleted Client with Client Id = ${clientId} successfully`));
 });
-export {createClient,getAllClients,getClientById,updateClient,deleteClient}
+export {createClient,getAllClients,getClientById,updateClient,deleteClient,getProjectsByClientId}
