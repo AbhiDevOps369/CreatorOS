@@ -3,6 +3,7 @@ import { verifyJwt } from "../middlewares/auth.middleware.js";
 import {requireRole} from "../middlewares/requireRole.middleware.js";
 import {submitFootage,approveFootage,rejectFootage,createTask,getAllTasks,getTaskById,updateTask,deleteTask,submitEdit,approveEdit,rejectEdit} from 
 "../controllers/task.controller.js";
+import subtaskRouter from "./subtask.routes.js"
 
 const router=Router({ mergeParams: true });
 
@@ -27,5 +28,5 @@ router.post("/:taskId/request-changes",verifyJwt,requireRole("reviewer"),rejectE
 router.patch("/:taskId",verifyJwt,requireRole("owner","manager","contributor"),updateTask);
 router.delete("/:taskId",verifyJwt,requireRole("owner","manager"),deleteTask);
 
-
+router.use("/:taskId/subtasks", subtaskRouter)
 export default router;

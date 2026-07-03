@@ -102,4 +102,21 @@ const deleteProject=asyncHandler(async(req,res)=>{
 
 
 });
-export {createProject,getAllProjects, updateProject,deleteProject,getProjectById}
+
+const approveProject=asyncHandler(async(req,res)=>{
+    const user=req.user;
+    const {projectId}=req.params;
+    const project=await Project.findById(projectId);
+    if(!project){
+        throw new ApiError(404,"No Project exists");
+    }
+
+    checkAgencyOwnership(projectId,user);
+
+    project.approvalStatus="approved";
+
+    await project.save({validateBeforeSave:false});
+
+    return res.status(200).json(new ApiResponse(200,project,"Successfully Approved"));
+});
+export {createProject,getAllProjects, updateProject,deleteProject,getProjectById,approveProject}
