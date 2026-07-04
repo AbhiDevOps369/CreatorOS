@@ -15,3 +15,5 @@ const createAgency=asyncHandler(async(req,res)=>{
     await user.save({validateBeforeSave:false});
     return res.status(201).json(new ApiResponse(201,agency,"Successfully created Agency"));
 });
+
+export {createAgency}

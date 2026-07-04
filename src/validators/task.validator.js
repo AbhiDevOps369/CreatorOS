@@ -10,7 +10,6 @@ const createTaskValidator = () => {
         .trim()
         .optional(),
     body("assignedTo")
-        .trim()
         .optional()
         .isMongoId()
         .withMessage("assignedTo must be a valid user ID")
@@ -31,4 +30,18 @@ const updateTaskValidator = () => {
     ]
 }
 
-export { createTaskValidator,updateTaskValidator }
+const submitDeliverableValidator = () => {
+    return [
+        body("url")
+            .trim()
+            .notEmpty()
+            .withMessage("url is required")
+            .isURL()
+            .withMessage("url must be a valid URL"),
+        body("message")
+            .trim()
+            .optional()
+    ]
+}
+
+export { createTaskValidator,updateTaskValidator,submitDeliverableValidator }

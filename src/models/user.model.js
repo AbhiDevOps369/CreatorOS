@@ -32,7 +32,6 @@ const userSchema=new Schema({
     agencyId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Agency",
-    required: true
     },
 
     //business attributes
