@@ -111,12 +111,66 @@ const approveProject=asyncHandler(async(req,res)=>{
         throw new ApiError(404,"No Project exists");
     }
 
-    checkAgencyOwnership(projectId,user);
+    checkAgencyOwnership(project, user.agencyId);
 
+    if (project.approvalStatus !== "pending") {
+    throw new ApiError(422, "Project is not pending approval")
+    }
     project.approvalStatus="approved";
 
     await project.save({validateBeforeSave:false});
 
     return res.status(200).json(new ApiResponse(200,project,"Successfully Approved"));
 });
-export {createProject,getAllProjects, updateProject,deleteProject,getProjectById,approveProject}
+
+const allocateTeam = asyncHandler(async (req, res) => {
+    const { projectId } = req.params
+    const { teamAssignments } = req.body  // array of { userId, role, assignedAs }
+
+    const project = await Project.findById(projectId)
+    if (!project) throw new ApiError(404, "No Project exists")
+
+    checkAgencyOwnership(project, req.user.agencyId)
+
+    const nextStage = canTransition(project.stage, "allocate-team", req.membership.role)
+    if (!nextStage) throw new ApiError(422, "Illegal transition")
+
+    for (const assignment of teamAssignments) {
+        const existing = await Membership.findOne({ userId: assignment.userId, projectId })
+        if (existing) continue
+        await Membership.create({
+            userId: assignment.userId,
+            projectId,
+            role: assignment.role,
+            assignedAs: assignment.assignedAs || null
+        })
+    }
+
+    project.stage = nextStage
+    await project.save()
+
+    return res.status(200).json(new ApiResponse(200, project, "Team allocated successfully"))
+});
+
+const deliverProject = asyncHandler(async (req, res) => {
+    const { projectId } = req.params
+
+    const project = await Project.findById(projectId)
+    if (!project) throw new ApiError(404, "No Project exists")
+
+    checkAgencyOwnership(project, req.user.agencyId)
+
+    if (project.stage !== "edit_review" || !project.editApproved) {
+        throw new ApiError(422, "Edit must be approved before delivery")
+    }
+
+    const nextStage = canTransition(project.stage, "deliver", req.membership.role)
+    if (!nextStage) throw new ApiError(422, "Illegal transition")
+
+    project.stage = nextStage
+    await project.save()
+
+    return res.status(200).json(new ApiResponse(200, project, "Project delivered successfully"))
+});
+
+export {createProject,getAllProjects, updateProject,deleteProject,getProjectById,approveProject,allocateTeam,deliverProject}

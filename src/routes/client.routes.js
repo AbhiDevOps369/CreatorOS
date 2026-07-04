@@ -4,6 +4,8 @@ import { verifyJwt } from "../middlewares/auth.middleware.js";
 import {requireRole} from "../middlewares/requireRole.middleware.js";
 import {createClient,getAllClients,getProjectsByClientId,getClientById,updateClient,deleteClient}
 from "../controllers/client.controller.js";
+import { validate } from "../middlewares/validate.middleware.js";
+import {createClientValidator,updateClientValidator} from "../validators/client.validator.js";
 
 const router=Router({ mergeParams: true });
 
@@ -15,10 +17,10 @@ const router=Router({ mergeParams: true });
 
 router.get("/",verifyJwt,requireRole("owner","manager"),getAllClients);
 router.get("/:clientId",verifyJwt,requireRole("owner","manager"),getClientById);
-router.get("/:clientId/projects",verifyJwt,requireRole("owner","manager"),getClientById);
-router.post("/",verifyJwt,requireRole("owner","manager"),createClient);
+router.get("/:clientId/projects", verifyJwt, requireRole("owner","manager"), getProjectsByClientId);
+router.post("/",verifyJwt,requireRole("owner","manager"),createClientValidator(),validate,createClient);
 router.delete("/:clientId",verifyJwt,requireRole("owner"),deleteClient);
-router.patch("/:clientId",verifyJwt,requireRole("owner","manager"),updateClient);
+router.patch("/:clientId",verifyJwt,requireRole("owner","manager"),updateClientValidator(),validate,updateClient);
 
 
 export default router;

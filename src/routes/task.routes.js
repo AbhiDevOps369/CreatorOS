@@ -3,7 +3,10 @@ import { verifyJwt } from "../middlewares/auth.middleware.js";
 import {requireRole} from "../middlewares/requireRole.middleware.js";
 import {submitFootage,approveFootage,rejectFootage,createTask,getAllTasks,getTaskById,updateTask,deleteTask,submitEdit,approveEdit,rejectEdit} from 
 "../controllers/task.controller.js";
-import subtaskRouter from "./subtask.routes.js"
+import subtaskRouter from "./subtask.routes.js";
+import { validate } from "../middlewares/validate.middleware.js";
+import { createTaskValidator,updateTaskValidator,submitDeliverableValidator} from 
+"../validators/task.validator.js";
 
 const router=Router({ mergeParams: true });
 
@@ -16,16 +19,16 @@ const router=Router({ mergeParams: true });
 router.get("/",verifyJwt,getAllTasks);
 router.get("/:taskId",verifyJwt,getTaskById);
 
-router.post("/",verifyJwt,requireRole("owner","manager","reviewer"),createTask);
-router.post("/:taskId/submit-footage",verifyJwt,requireRole("contributor"),submitFootage);
+router.post("/",verifyJwt,requireRole("owner","manager","reviewer"),createTaskValidator(),validate,createTask);
+router.post("/:taskId/submit-footage",verifyJwt,requireRole("contributor"),submitDeliverableValidator(),validate,submitFootage);
 router.post("/:taskId/approve-footage",verifyJwt,requireRole("reviewer"),approveFootage);
 router.post("/:taskId/reject-footage",verifyJwt,requireRole("reviewer"),rejectFootage);
-router.post("/:taskId/submit-edit",verifyJwt,requireRole("contributor"),submitEdit);
+router.post("/:taskId/submit-edit",verifyJwt,requireRole("contributor"),submitDeliverableValidator(),validate,submitEdit);
 router.post("/:taskId/approve-edit",verifyJwt,requireRole("reviewer"),approveEdit);
 router.post("/:taskId/request-changes",verifyJwt,requireRole("reviewer"),rejectEdit);
 
 
-router.patch("/:taskId",verifyJwt,requireRole("owner","manager","contributor"),updateTask);
+router.patch("/:taskId",verifyJwt,requireRole("owner","manager","contributor"),updateTaskValidator(),validate,updateTask);
 router.delete("/:taskId",verifyJwt,requireRole("owner","manager"),deleteTask);
 
 router.use("/:taskId/subtasks", subtaskRouter)
