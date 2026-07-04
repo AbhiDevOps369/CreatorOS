@@ -4,13 +4,18 @@ import {ApiResponse} from  "../utils/apiResponse.js";
 import {Client} from "../models/client.models.js";
 import { Project } from "../models/project.models.js";
 import { checkAgencyOwnership } from "../utils/checkOwnership.js";
+import { User } from "../models/user.model.js";
 
 const createClient=asyncHandler(async(req,res)=>{
     const {name,email,password}=req.body;
 
-    const existingClient = await Client.findOne({ email })
-    if (existingClient) {
+    const existingClient = await Client.findOne({ email });
+    const existingMember = await User.findOne({ email })
+    if (existingClient ) {
         throw new ApiError(409, "Client with this email already exists")
+    }
+    if (existingMember) {
+        throw new ApiError(409, "Agency member cannot be client")
     }
 
     const client=await Client.create({

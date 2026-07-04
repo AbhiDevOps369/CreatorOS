@@ -6,7 +6,7 @@ import {createClient,getAllClients,getProjectsByClientId,getClientById,updateCli
 from "../controllers/client.controller.js";
 import { validate } from "../middlewares/validate.middleware.js";
 import {createClientValidator,updateClientValidator} from "../validators/client.validator.js";
-
+import { requireAgencyOwner } from "../middlewares/requireAgencyOwner.js";
 const router=Router({ mergeParams: true });
 
 //public
@@ -15,12 +15,14 @@ const router=Router({ mergeParams: true });
 
 //protected
 
-router.get("/",verifyJwt,requireRole("owner","manager"),getAllClients);
-router.get("/:clientId",verifyJwt,requireRole("owner","manager"),getClientById);
-router.get("/:clientId/projects", verifyJwt, requireRole("owner","manager"), getProjectsByClientId);
-router.post("/",verifyJwt,requireRole("owner","manager"),createClientValidator(),validate,createClient);
-router.delete("/:clientId",verifyJwt,requireRole("owner"),deleteClient);
-router.patch("/:clientId",verifyJwt,requireRole("owner","manager"),updateClientValidator(),validate,updateClient);
+
+router.get("/",verifyJwt(),requireAgencyOwner,getAllClients); //✅
+router.get("/:clientId",verifyJwt(),requireAgencyOwner,getClientById); //✅
+router.get("/:clientId/projects", verifyJwt(), requireRole("owner","manager"), getProjectsByClientId);
+
+router.post("/", verifyJwt(),requireAgencyOwner, createClientValidator(), validate, createClient);//✅
+router.delete("/:clientId",verifyJwt(),requireAgencyOwner,deleteClient);
+router.patch("/:clientId",verifyJwt(),requireAgencyOwner,updateClientValidator(),validate,updateClient);
 
 
 export default router;
