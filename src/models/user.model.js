@@ -30,8 +30,8 @@ const userSchema=new Schema({
         required:true
     },
     agencyId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Agency",
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Agency",
     },
 
     //business attributes
@@ -51,6 +51,17 @@ const userSchema=new Schema({
     },
     emailVerificationExpiry:{
         type:Date
+    },
+    AgencyVerificationToken:{
+        type:String,
+        
+    },
+    AgencyVerificationExpiry:{
+        type:Date
+    },
+    pendingAgencyId:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Agency",
     }
    
 },{

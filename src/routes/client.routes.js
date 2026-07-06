@@ -20,9 +20,9 @@ router.get("/",verifyJwt(),requireAgencyOwner,getAllClients); //✅
 router.get("/:clientId",verifyJwt(),requireAgencyOwner,getClientById); //✅
 router.get("/:clientId/projects", verifyJwt(), requireRole("owner","manager"), getProjectsByClientId);
 
-router.post("/", verifyJwt(),requireAgencyOwner, createClientValidator(), validate, createClient);//✅
-router.delete("/:clientId",verifyJwt(),requireAgencyOwner,deleteClient);
-router.patch("/:clientId",verifyJwt(),requireAgencyOwner,updateClientValidator(),validate,updateClient);
+router.post("/", verifyJwt(),requireAgencyOwner, createClientValidator(), validate, createClient); //✅
+router.delete("/:clientId",verifyJwt(),requireAgencyOwner,deleteClient); //✅
+router.patch("/:clientId",verifyJwt(),requireAgencyOwner,updateClientValidator(),validate,updateClient); //✅
 
 
 export default router;

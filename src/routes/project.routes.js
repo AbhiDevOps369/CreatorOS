@@ -17,7 +17,8 @@ const router=Router({ mergeParams: true });
 //protected
 router.get("/",verifyJwt(),getAllProjects);
 router.get("/:projectId",verifyJwt(),getProjectById);
-router.post("/", verifyJwt(), requireAgencyOwner, createProjectValidator(), validate, createProject)
+
+router.post("/", verifyJwt(), requireAgencyOwner, createProjectValidator(), validate, createProject);
 router.patch("/:projectId",verifyJwt(),requireRole("owner","manager"),  updateProjectValidator(),validate,updateProject);
 router.delete("/:projectId",verifyJwt(),requireRole("owner"),deleteProject);
 

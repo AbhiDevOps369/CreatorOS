@@ -9,7 +9,7 @@ import { checkAgencyOwnership } from "../utils/checkOwnership.js"
 const createProject=asyncHandler(async(req,res)=>{
     const { name, description, clientId } = req.body
     const user=req.user;
-    const role=req.membership.role;
+    const role="owner";
     const client = await Client.findById(clientId)
     if (!client) throw new ApiError(404, "Client not found");
 
