@@ -5,6 +5,7 @@ import { Project } from "../models/project.models.js"
 import { Membership } from "../models/projectMembership.models.js"
 import { Client } from "../models/client.models.js"
 import { checkAgencyOwnership } from "../utils/checkOwnership.js"
+import { canTransition} from "../utils/pipeline/stateMachine.js"
 
 const createProject=asyncHandler(async(req,res)=>{
     const { name, description, clientId } = req.body
@@ -21,7 +22,7 @@ const createProject=asyncHandler(async(req,res)=>{
     clientId,
     agencyId: req.user.agencyId,
     stage: "created",
-    approvalStatus: role === "owner" ? "approved" : "pending",
+    approvalStatus: "approved",
     createdBy: req.user._id
     });
 
@@ -103,25 +104,6 @@ const deleteProject=asyncHandler(async(req,res)=>{
 
 });
 
-const approveProject=asyncHandler(async(req,res)=>{
-    const user=req.user;
-    const {projectId}=req.params;
-    const project=await Project.findById(projectId);
-    if(!project){
-        throw new ApiError(404,"No Project exists");
-    }
-
-    checkAgencyOwnership(project, user.agencyId);
-
-    if (project.approvalStatus !== "pending") {
-    throw new ApiError(422, "Project is not pending approval")
-    }
-    project.approvalStatus="approved";
-
-    await project.save({validateBeforeSave:false});
-
-    return res.status(200).json(new ApiResponse(200,project,"Successfully Approved"));
-});
 
 const allocateTeam = asyncHandler(async (req, res) => {
     const { projectId } = req.params
@@ -173,4 +155,4 @@ const deliverProject = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, project, "Project delivered successfully"))
 });
 
-export {createProject,getAllProjects, updateProject,deleteProject,getProjectById,approveProject,allocateTeam,deliverProject}
+export {createProject,getAllProjects, updateProject,deleteProject,getProjectById,allocateTeam,deliverProject}

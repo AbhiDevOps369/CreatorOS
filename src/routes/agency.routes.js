@@ -8,8 +8,8 @@ const router=Router({ mergeParams: true });
 
 router.post("/",verifyJwt(),createAgencyValidator(),validate,createAgency); //✅
 
-router.post("/invite-member", verifyJwt(),requireAgencyOwner,inviteMember);
+router.post("/invite-member", verifyJwt(),requireAgencyOwner,inviteMember);//✅
 
-router.get("/accept-invite/:unHashedToken", acceptMember)
+router.get("/accept-invite/:unHashedToken", acceptMember);//✅
 
 export default router;

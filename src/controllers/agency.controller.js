@@ -43,7 +43,7 @@ const inviteMember=asyncHandler(async(req,res)=>{
     await sendEmail({
             email:user?.email,
             subject:"Please Accept Invitation to agency",
-            mailgenContent:emailVerificationMailgenContent(user.name,`${req.protocol}://${req.get("host")}/api/v1/agency/accept-invite/${unHashedToken}`)
+            mailgenContent:emailVerificationMailgenContent(user.name,`${req.protocol}://${req.get("host")}/api/v1/agencies/accept-invite/${unHashedToken}`)
     });
 
     return res.status(200).json(new ApiResponse(200,{},"invite email sent"));

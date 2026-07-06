@@ -1,5 +1,5 @@
 
-import { transitions } from "./transitions.js"
+import { transitions } from "./transition.js"
 
 const canTransition = (currentStage, action, role) => {
     const stageRules = transitions[currentStage]

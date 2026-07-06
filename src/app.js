@@ -23,9 +23,9 @@ app.use(cookieParser());
 
 
 //aggregate route handling 
-app.use("/api/v1/auth", authRouter)
-app.use("/api/v1/agencies", agencyRouter)
-app.use("/api/v1/clients", clientRouter)
+app.use("/api/v1/auth", authRouter) //✅
+app.use("/api/v1/agencies", agencyRouter) //✅
+app.use("/api/v1/clients", clientRouter) //✅
 app.use("/api/v1/projects", projectRouter)   // ← this ONE line now carries members, notes, tasks, subtasks — everything nested inside
 app.use("/api/v1/portal", portalRouter)
 

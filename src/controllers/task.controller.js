@@ -292,4 +292,25 @@ const rejectEdit=asyncHandler(async(req,res)=>{
 
     return res.status(200).json(new ApiResponse(200, project, "Changes requested"));
 });
-export {submitFootage,approveFootage,rejectFootage,createTask,getAllTasks,getTaskById,updateTask,deleteTask,submitEdit,approveEdit,rejectEdit}
+
+const deliverProject = asyncHandler(async (req, res) => {
+    const { projectId } = req.params
+
+    const project = await Project.findById(projectId)
+    if (!project) throw new ApiError(404, "No Project exists")
+
+    checkAgencyOwnership(project, req.user.agencyId)
+
+    if (project.stage !== "edit_review" || !project.editApproved) {
+        throw new ApiError(422, "Edit must be approved before delivery")
+    }
+
+    const nextStage = canTransition(project.stage, "deliver", req.membership.role)
+    if (!nextStage) throw new ApiError(422, "Illegal transition")
+
+    project.stage = nextStage
+    await project.save()
+
+    return res.status(200).json(new ApiResponse(200, project, "Project delivered successfully"))
+});
+export {submitFootage,approveFootage,rejectFootage,createTask,getAllTasks,getTaskById,updateTask,deleteTask,submitEdit,approveEdit,rejectEdit,deliverProject}
