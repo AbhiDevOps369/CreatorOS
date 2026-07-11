@@ -1,4 +1,4 @@
-
+import 'dotenv/config'; // must load before app.js — cors reads CORS_ORIGIN at module evaluation
 import app from "./app.js";
 import { connectDb } from './db/index.js';
 

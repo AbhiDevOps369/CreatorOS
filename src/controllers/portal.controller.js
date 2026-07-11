@@ -5,6 +5,68 @@ import { ApiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { Task } from "../models/task.models.js";
 
+const loginClient = asyncHandler(async (req, res) => {
+    const { email, password } = req.body
+    if (!email || !password) {
+        throw new ApiError(400, "email and password are required")
+    }
+
+    const client = await Client.findOne({ email })
+    if (!client) {
+        throw new ApiError(400, "client does not exist !")
+    }
+
+    const passResult = await client.isPasswordCorrect(password)
+    if (!passResult) {
+        throw new ApiError(400, "Invalid credentials!")
+    }
+
+    const accessToken = client.generateAccessToken()
+    const refreshToken = client.generateRefreshToken()
+    client.refreshToken = refreshToken
+    await client.save({ validateBeforeSave: false })
+
+    const loggedClient = await Client.findById(client._id).select(
+        "-password -refreshToken -emailVerificationToken -emailVerificationExpiry"
+    )
+
+    const options = {
+        httpOnly: true,
+        secure: true
+    }
+
+    return res.status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json(
+            new ApiResponse(200, {
+                client: loggedClient,
+                accessToken, refreshToken
+            },
+            "Client logged in successfully")
+        )
+});
+
+const logoutClient = asyncHandler(async (req, res) => {
+    await Client.findByIdAndUpdate(
+        req.client._id,
+        { $set: { refreshToken: "" } },
+        { new: true }
+    )
+    const options = {
+        httpOnly: true,
+        secure: true
+    }
+    return res.status(200)
+        .clearCookie("accessToken", options)
+        .clearCookie("refreshToken", options)
+        .json(new ApiResponse(200, {}, "Client logged out"))
+});
+
+const getCurrentClient = asyncHandler(async (req, res) => {
+    return res.status(200).json(new ApiResponse(200, req.client, "Current client fetched successfully"))
+});
+
 const getClientProjects = asyncHandler(async (req, res) => {
     const projects = await Project.find({ clientId: req.client._id })
         .select("name stage createdAt") 
@@ -34,4 +96,4 @@ const getClientProjectById = asyncHandler(async (req, res) => {
     }, "Success"))
 });
 
-export {getClientProjectById,getClientProjects}
+export {getClientProjectById,getClientProjects,loginClient,logoutClient,getCurrentClient}

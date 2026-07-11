@@ -10,11 +10,11 @@ const router=Router({ mergeParams: true });
 
 //protected : /api/v1/projects/:projectId/tasks/:taskId/subtasks
 
-router.get("/",verifyJwt,getSubtasks);
-router.get("/:subtaskId",verifyJwt,getSubtaskById);
+router.get("/",verifyJwt(),getSubtasks);
+router.get("/:subtaskId",verifyJwt(),getSubtaskById);
 
-router.post("/",verifyJwt,requireRole("owner","manager","reviewer"),createSubtask);
-router.delete("/:subtaskId",verifyJwt,requireRole("owner","manager","reviewer"),deleteSubtask);
-router.patch("/:subtaskId",verifyJwt,requireRole("owner","manager","contributor","reviewer"),updateSubtask);
+router.post("/",verifyJwt(),requireRole("owner","manager","reviewer"),createSubtask);
+router.delete("/:subtaskId",verifyJwt(),requireRole("owner","manager","reviewer"),deleteSubtask);
+router.patch("/:subtaskId",verifyJwt(),requireRole("owner","manager","contributor","reviewer"),updateSubtask);
 
 export default router;

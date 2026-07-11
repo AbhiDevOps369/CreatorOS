@@ -1,0 +1,173 @@
+═══════════════════════════════════════
+PROJECT CONTEXT — READ THIS FIRST
+═══════════════════════════════════════
+
+CreatorOS is a project management platform for creative and marketing 
+agencies, modeling a real video production workflow. The backend (Node/
+Express/MongoDB) is already fully built and tested — your job is to build 
+the frontend that talks to it.
+
+THE CORE IDEA: An agency has a founding Owner. The owner can invite staff 
+(Managers, Contributors, Reviewers) to join the agency. The agency serves 
+Clients, and each Client can have multiple Projects. Every Project moves 
+through a fixed six-stage production pipeline:
+
+  created → footage_collection → footage_review → editing → 
+  edit_review → delivered
+
+Movement through these stages happens via specific named actions, each 
+restricted to a specific role:
+
+  allocate-team    (owner/manager)     created → footage_collection
+  submit-footage   (contributor)       footage_collection → footage_review
+  approve-footage  (reviewer)          footage_review → editing
+  reject-footage   (reviewer)          footage_review → footage_collection
+  submit-edit      (contributor)       editing → edit_review
+  approve-edit     (reviewer)          sets editApproved=true, stays in edit_review
+  request-changes  (reviewer)          edit_review → editing
+  deliver          (owner/manager)     edit_review → delivered 
+                                       (only if editApproved=true)
+
+THE KEY DESIGN PRINCIPLE: roles are per-project, not global. The same 
+person can be a Manager on one project and a Contributor on another — 
+role lives on a ProjectMembership record, not on the User. A person's 
+craft (jobTitle — e.g. "videographer", "editor") is a separate, stable 
+fact about them and carries no permission meaning by itself.
+
+THE TWO REVIEW GATES ARE ASYMMETRIC: rejecting footage sends work back to 
+the videographer/footage stage. Rejecting an edit sends work back to the 
+editor only — never back to footage collection. Once footage is approved, 
+the videographer is out of the loop permanently on that project.
+
+Clients have NO login-based creation — they're provisioned by staff, and 
+they access a separate, read-only Portal (different auth entirely, 
+verifyJwt("client") not verifyJwt("user")) showing only their own 
+projects' status and deliverables — never internal tasks, notes, or team 
+info.
+
+Entities: Agency, User (staff), Client, Project, ProjectMembership, Task 
+(with embedded attachments array — deliverables are just {url, message} 
+pairs), Subtask (checklist items under a task), Note (feedback on a 
+project, with an acknowledgedBy array for contributors to mark as read).
+
+═══════════════════════════════════════
+YOUR JOB
+═══════════════════════════════════════
+
+Build a React frontend for this backend. Base URL: 
+http://localhost:3000/api/v1
+
+Tech stack: React + Vite, Tailwind CSS, Axios, React Router v6, Context 
+API for auth state (no Redux, no unnecessary dependencies).
+
+PAGES TO BUILD:
+
+1. Login — POST /auth/login
+2. Register — POST /auth/register
+3. Onboarding (shown if agencyId is null after login) — either 
+   "Create Agency" (POST /agencies) or a waiting state if they were 
+   already invited
+4. Dashboard — GET /projects, shows project cards with name, client, 
+   current stage as a badge, the logged-in user's role on that project
+5. Project Detail — the centerpiece page. Shows the pipeline as a 
+   visual "road" (see design section), the list of tasks, and 
+   role-appropriate action buttons that only appear when the logged-in 
+   user's role and the project's current stage make an action legal
+6. Task Detail — attachments, subtasks checklist, notes feed, with 
+   role-aware submit/approve/reject controls
+7. Client Portal — completely separate login flow using client 
+   credentials, read-only project status + deliverables view
+
+FOLDER STRUCTURE:
+src/
+├── api/api.js                  ← central axios instance, auth interceptor
+├── context/AuthContext.jsx     ← user state, login/logout
+├── components/
+│   ├── Pipeline/PipelineRoad.jsx, StageNode.jsx
+│   ├── Task/TaskCard.jsx, TaskActions.jsx
+│   ├── Layout/Sidebar.jsx, Navbar.jsx
+│   └── UI/Button.jsx, Badge.jsx
+├── pages/
+│   ├── Auth/Login.jsx, Register.jsx
+│   ├── Onboarding/CreateAgency.jsx
+│   ├── Dashboard.jsx, ProjectDetail.jsx, TaskDetail.jsx
+│   └── Portal/PortalLogin.jsx, PortalProject.jsx
+└── utils/roleUtils.js           ← canSubmitFootage(role,stage), 
+                                    canApproveFootage(role,stage), etc.
+
+ROLE-BASED RENDERING: never build separate pages per role. One component, 
+conditional rendering based on `role` (from project membership) and 
+`stage` (from the project). Example:
+
+  {role === "contributor" && stage === "footage_collection" && (
+    <SubmitFootageButton />
+  )}
+
+AUTH FLOW: on 401, use an axios interceptor to call POST /auth/refresh-token 
+automatically, then retry the original request. If refresh also fails, 
+redirect to login. Tokens live in memory via Context, never localStorage.
+
+═══════════════════════════════════════
+DESIGN LANGUAGE
+═══════════════════════════════════════
+Aim for a warm, premium, editorial feel — NOT typical SaaS. Think: 
+high-end design studio meets a calm, considered aesthetic. The user 
+should open it and think "this feels crafted, I want to come back."
+
+PALETTE:
+- Background: warm off-white / bone (#FAF9F5 or #F5F2EB) in light mode
+- Dark mode: warm charcoal (#1C1B19), not cold black
+- Text: warm near-black (#2B2A26), never pure #000
+- Accent: ONE sophisticated tone — muted terracotta (#C4633F), warm 
+  ochre (#B8874B), or deep sage (#6B7355). Pick one, use sparingly.
+- Surfaces: subtle warm cards, soft shadows
+- Borders: hairline, warm gray, low contrast
+
+TYPOGRAPHY:
+- Headings: a refined serif or distinctive display font (Fraunces, 
+  Instrument Serif, or Editorial New)
+- Body/UI: clean humanist sans (Inter, General Sans, Satoshi, or Geist)
+- Generous line-height, large confident headings, don't be timid with 
+  type scale
+
+FEEL:
+- Minimalist but NOT basic — restraint with intention
+- Micro-interactions: subtle hover states, 200-300ms smooth transitions, 
+  gentle fade-ins on page load
+- The pipeline "road" should feel alive — subtle animated flow along the 
+  connecting path, gentle glow on the active stage, smooth transitions 
+  when a stage advances
+- Soft shadows, rounded corners (8-12px), never sharp
+- Whitespace is a feature — let it breathe
+- Elegant loading states — skeleton screens, not spinners
+
+The test: it should feel like a premium product someone would screenshot 
+and share, not a bootcamp project.
+
+═══════════════════════════════════════
+REQUIRED FILE: BUILD_ORDER.md
+═══════════════════════════════════════
+Create BUILD_ORDER.md explaining — as if teaching someone building this 
+FROM SCRATCH — which files to create first and why, in dependency order:
+
+- What's the very first file, and why (likely the API client or app 
+  entry/routing skeleton)
+- Why auth context comes before pages
+- Why api.js and its interceptors come before any page that fetches data
+- Why shared UI components come before the pages that use them
+- Why pipeline components are built before ProjectDetail
+- Why pages are assembled last, once their building blocks exist
+
+For each step, explain the DEPENDENCY reasoning — "you build X before Y 
+because Y imports/depends on X." This file is for LEARNING — it should 
+teach how frontend architecture flows, the same way this backend was 
+built models-first, then middleware, then controllers, then routes.
+
+═══════════════════════════════════════
+SCOPE
+═══════════════════════════════════════
+This is v1. Build the vertical slice described above completely and well 
+— don't half-build seven pages. A smaller set of pages built to the full 
+design and interaction quality described is better than a large set of 
+generic-feeling pages. Backend is complete and correct — do not modify 
+any backend files in this session.

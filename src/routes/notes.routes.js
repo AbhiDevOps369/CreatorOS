@@ -7,14 +7,14 @@ const router=Router({ mergeParams: true });
 
 //protected :/api/v1/projects/:projectId/note
 
-router.get("/",verifyJwt,getNotes);
-router.get("/:noteId",verifyJwt,getNoteById);
+router.get("/",verifyJwt(),getNotes);
+router.get("/:noteId",verifyJwt(),getNoteById);
 
-router.post("/",verifyJwt,requireRole("owner","manager","reviewer"),createNote);
-router.patch("/:noteId",verifyJwt,updateNote); //ownership and role checked in cntrller
+router.post("/",verifyJwt(),requireRole("owner","manager","reviewer"),createNote);
+router.patch("/:noteId",verifyJwt(),requireRole("owner","manager","reviewer"),updateNote); //ownership and role checked in cntrller (controller reads req.membership, so requireRole must run to attach it)
 
-router.delete("/:noteId",verifyJwt,requireRole("owner","manager","reviewer"),deleteNote);
+router.delete("/:noteId",verifyJwt(),requireRole("owner","manager","reviewer"),deleteNote);
 
-router.post("/:noteId/acknowledge",verifyJwt,requireRole("contributor"),acknowledgeNote); //why post here get can also work right?
+router.post("/:noteId/acknowledge",verifyJwt(),requireRole("contributor"),acknowledgeNote); //why post here get can also work right?
 
 export default router;

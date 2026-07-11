@@ -41,11 +41,11 @@ const getMember=asyncHandler(async(req,res)=>{
 
 const updateMemberRole=asyncHandler(async(req,res)=>{
     const {role,assignedAs}=req.body;
-    const {userId}=req.params;
+    const {userId,projectId}=req.params;
 
     const user=await User.findById(userId);
     checkAgencyOwnership(user,req.user.agencyId);
-    const membership=await Membership.findOne({userId:userId});
+    const membership=await Membership.findOne({userId:userId,projectId:projectId}); //scoped to this project — role is per-project
     if(!membership){
         throw new ApiError(404,"No membership for this user available ");
     }

@@ -29,4 +29,18 @@ app.use("/api/v1/clients", clientRouter) //✅
 app.use("/api/v1/projects", projectRouter)   // ← this ONE line now carries members, notes, tasks, subtasks — everything nested inside
 app.use("/api/v1/portal", portalRouter)
 
+// error handler — converts thrown ApiErrors into the standard JSON shape
+// (without this, every ApiError falls through to Express's default HTML 500
+// and the frontend can never see real status codes like 401/403/422)
+app.use((err, req, res, next) => {
+    const statusCode = err.statusCode || 500;
+    return res.status(statusCode).json({
+        statusCode,
+        data: null,
+        success: false,
+        message: err.message || "Something Went Wrong",
+        errors: err.errors || []
+    });
+});
+
 export default app;

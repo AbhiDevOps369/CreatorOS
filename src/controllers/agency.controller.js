@@ -85,4 +85,12 @@ const acceptMember=asyncHandler(async(req,res)=>{
         )
     );
 });
-export {createAgency,inviteMember,acceptMember}
+const getAgencyMembers=asyncHandler(async(req,res)=>{
+    if(!req.user.agencyId){
+        throw new ApiError(403,"You are not part of an agency");
+    }
+    const members=await User.find({agencyId:req.user.agencyId}).select("name email jobTitle");
+    return res.status(200).json(new ApiResponse(200,members,"Agency members fetched successfully"));
+});
+
+export {createAgency,inviteMember,acceptMember,getAgencyMembers}
